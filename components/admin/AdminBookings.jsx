@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import { FaTrash, FaCheckCircle, FaClock } from "react-icons/fa";
+import { toast } from "react-hot-toast";
+
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
@@ -23,6 +26,7 @@ export default function AdminBookings() {
         }
       } catch (err) {
         setError("Error fetching bookings");
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -48,35 +52,64 @@ export default function AdminBookings() {
     }
   }, [search, bookings]);
 
-  // 💳 Update payment status
-  async function handleMarkPaid(bookingId) {
+  // 💳 Toggle payment status (paid <-> pending)
+  async function handleTogglePayment(bookingId) {
+    const current = bookings.find((b) => b._id === bookingId);
+    if (!current) return;
+
+    const newStatus = current.paymentStatus === "paid" ? "pending" : "paid";
+
     try {
       const res = await fetch(`/api/admin/bookings/${bookingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentStatus: "paid" }),
+        body: JSON.stringify({ paymentStatus: newStatus }),
       });
 
       const data = await res.json();
-      if (res.ok) {
-        setBookings((prev) =>
-          prev.map((b) =>
-            b._id === bookingId ? { ...b, paymentStatus: "paid" } : b
-          )
-        );
-      } else {
-        alert(data.message || "Failed to update payment status");
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update payment status");
       }
+
+      setBookings((prev) =>
+        prev.map((b) => (b._id === bookingId ? { ...b, paymentStatus: newStatus } : b))
+      );
     } catch (err) {
-      alert("Error updating payment status");
       console.error(err);
+      alert("Error updating payment status: " + (err.message || err));
+
+    }
+  }
+
+  // 🗑️ Delete booking
+  async function handleDelete(bookingId) {
+    if (!confirm("Are you sure you want to delete this booking? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/bookings/${bookingId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to delete booking");
+      }
+
+      setBookings((prev) => prev.filter((b) => b._id !== bookingId));
+      setFilteredBookings((prev) => prev.filter((b) => b._id !== bookingId));
+    } catch (err) {
+      console.error(err);
+      toast.error("Error deleting booking: " + (err.message || err));
     }
   }
 
   if (loading) return <p>Loading bookings...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
-  // ✅ Table + Responsive Design
   return (
     <div className="p-4 max-w-6xl mx-auto mt-10">
       <h1 className="text-2xl font-bold mb-4 text-center">All Bookings</h1>
@@ -100,9 +133,9 @@ export default function AdminBookings() {
               <th className="border p-2 w-16">No</th>
               <th className="border p-2">Ticket No</th>
               <th className="border p-2">Firstname</th>
-              <th className="border p-2">Email</th>
               <th className="border p-2">Phone</th>
               <th className="border p-2">Payment Status</th>
+              <th className="border p-2">Actions</th>
             </tr>
           </thead>
 
@@ -117,27 +150,37 @@ export default function AdminBookings() {
                   <td className="border p-2 font-semibold text-blue-600">
                     {b.ticketNumber || "—"}
                   </td>
-                  <td className="border p-2">{b.firstname}</td>
-                  <td className="border p-2">{b.email}</td>
+                  <td className="border p-2">{b.firstname} {b.lastname ? ` ${b.lastname}` : ""}</td>
                   <td className="border p-2">{b.phone}</td>
                   <td className="border p-2">
                     <span
                       className={`px-2 py-1 rounded text-white ${
-                        b.paymentStatus === "paid"
-                          ? "bg-green-500"
-                          : "bg-yellow-500"
+                        b.paymentStatus === "paid" ? "bg-green-500" : "bg-yellow-500"
                       }`}
                     >
                       {b.paymentStatus}
                     </span>
-                    {b.paymentStatus === "pending" && (
-                      <button
-                        onClick={() => handleMarkPaid(b._id)}
-                        className="ml-2 bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                      >
-                        Mark Paid
-                      </button>
-                    )}
+                  </td>
+                  <td className="border p-2 flex justify-center space-x-2">
+                    {/* Toggle Payment */}
+                    <button
+                      onClick={() => handleTogglePayment(b._id)}
+                      title={b.paymentStatus === "paid" ? "Mark Pending" : "Mark Paid"}
+                      className={`p-2 rounded hover:bg-gray-200 transition ${
+                        b.paymentStatus === "paid" ? "text-yellow-500" : "text-green-500"
+                      }`}
+                    >
+                      {b.paymentStatus === "paid" ? <FaClock size={18} /> : <FaCheckCircle size={18} />}
+                    </button>
+
+                    {/* Delete Booking */}
+                    <button
+                      onClick={() => handleDelete(b._id)}
+                      title="Delete Booking"
+                      className="p-2 rounded text-red-500 hover:bg-gray-200 transition"
+                    >
+                      <FaTrash size={18} />
+                    </button>
                   </td>
                 </tr>
               ))
