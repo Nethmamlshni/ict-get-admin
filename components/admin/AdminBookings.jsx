@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { FaTrash, FaCheckCircle, FaClock, FaPhoneAlt, FaTicketAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
-
+import CheckinStats from "./CheckinStats";
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
@@ -17,7 +17,6 @@ export default function AdminBookings() {
       try {
         const res = await fetch("/api/admin/bookings");
         const data = await res.json();
-
         if (!res.ok) {
           throw new Error(data.message || "Failed to fetch bookings");
         }
@@ -53,12 +52,16 @@ export default function AdminBookings() {
         const ticket = String(b.ticketNumber ?? "").toLowerCase();
         const enrol = String(b.enrollmentnumber ?? "").toLowerCase();
         const phone = String(b.phone ?? "").toLowerCase();
+        const campusbus = String(b.campusbus ?? "").toLowerCase();
+        const boarding = String(b.boarding ?? "").toLowerCase();
         return (
           first.includes(lower) ||
           last.includes(lower) ||
           ticket.includes(lower) ||
           enrol.includes(lower) ||
-          phone.includes(lower)
+          phone.includes(lower) ||
+          campusbus.includes(lower) ||
+          boarding.includes(lower)
         );
       })
     );
@@ -172,7 +175,7 @@ export default function AdminBookings() {
           className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-300"
         />
       </div>
-
+      <CheckinStats />
       {/* MOBILE: card list */}
       <div className="space-y-3 sm:hidden">
         {filteredBookings.map((b, index) => (
@@ -208,6 +211,8 @@ export default function AdminBookings() {
                 <FaPhoneAlt className="inline" /> {b.phone ?? "—"}
               </p>
               <p>Enrollment: <span className="font-medium">{b.enrollmentnumber || "—"}</span></p>
+              <p>campusBus: <span className="font-medium">{b.campusBus || "—"}</span> </p>
+              <p>Boarding: <span className="font-medium">{b.boarding || "—"}</span> </p>
             </div>
 
             <div className="mt-3 flex items-center gap-2">
