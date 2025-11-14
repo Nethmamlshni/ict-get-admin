@@ -211,8 +211,6 @@ export default function AdminBookings() {
                 <FaPhoneAlt className="inline" /> {b.phone ?? "—"}
               </p>
               <p>Enrollment: <span className="font-medium">{b.enrollmentnumber || "—"}</span></p>
-              <p>campusBus: <span className="font-medium">{b.campusBus || "—"}</span> </p>
-              <p>Boarding: <span className="font-medium">{b.boarding || "—"}</span> </p>
             </div>
 
             <div className="mt-3 flex items-center gap-2">
