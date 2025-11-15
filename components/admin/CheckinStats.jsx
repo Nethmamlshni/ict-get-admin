@@ -57,8 +57,8 @@ export default function CheckinStats() {
         <Stat label="Total tickets" value={stats.totalTickets} onClick={() => fetchDetails("allTickets")} />
         <Stat label="Paid" value={stats.paidCount} onClick={() => fetchDetails("paid")} />
         <Stat label="Pending / Unpaid" value={stats.pendingCount} onClick={() => fetchDetails("pending")} />
-        <Stat label="Transport (campus bus) yes" value={stats.transportYesCount} onClick={() => fetchDetails("transportYes")} />
-        <Stat label="Hostel (boarding) yes" value={stats.hostelYesCount} onClick={() => fetchDetails("hostelYes")} />
+        <Stat label="Transport" value={stats.transportYesCount} onClick={() => fetchDetails("transportYes")} />
+        <Stat label="Hostel " value={stats.hostelYesCount} onClick={() => fetchDetails("hostelYes")} />
       </div>
 
       {/* Refresh button */}
